@@ -16,6 +16,6 @@ Em desenvolvimento 🚀
 
 ---
 
-##🧑‍💻 Autor
+## 🧑‍💻 Autor
 
 David Nunes
