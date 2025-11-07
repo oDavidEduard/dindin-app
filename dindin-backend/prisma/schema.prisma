@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Tabela de Usuários
+model User {
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  passwordHash   String
+  monthlyIncome  Decimal?  // O '?' indica que o campo é opcional
+
+  expenses       Expense[] // Relação: Um usuário pode ter várias despesas
+  budgets        Budget[]  // Relação: Um usuário pode ter vários orçamentos
+}
+
+// Tabela de Categorias
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  iconName  String?
+
+  expenses  Expense[] // Relação: Uma categoria pode estar em várias despesas
+  budgets   Budget[]  // Relação: Uma categoria pode ter vários orçamentos
+}
+
+// Tabela de Despesas
+model Expense {
+  id          Int      @id @default(autoincrement())
+  name        String
+  amount      Decimal
+  description String?
+  date        DateTime
+  isEssential Boolean  @default(false)
+
+  // Chaves estrangeiras e relação
+  user        User     @relation(fields: [userId], references: [id])
+  userId      Int
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+}
+
+// Tabela de Orçamentos (Metas)
+model Budget {
+  id          Int     @id @default(autoincrement())
+  amountLimit Decimal
+  monthYear   String  // Ex: "2025-10"
+
+  // Chaves estrangeiras e relação
+  user        User    @relation(fields: [userId], references: [id])
+  userId      Int
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+}
