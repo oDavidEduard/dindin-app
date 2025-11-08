@@ -5,7 +5,7 @@ export const createExpense = async (req,res) => {
     const { name, amount, description, date, isEssential, categoryId } = req.body;
     const userId = req.userId;
 
-    if(!name || !amount || !date || !categoryId || !isEssential){
+    if(!name || !amount || !date || !categoryId){
         return res.status(400).json({ error: "Preencha os campos obrigatórios." })
     }
 

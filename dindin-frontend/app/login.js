@@ -55,7 +55,7 @@ export default function LoginScreen(){
 
             } else {
 
-              router.replace("/dashboard");
+              router.replace("/(tabs)");
 
             }
           }
