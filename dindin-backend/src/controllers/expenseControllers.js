@@ -34,11 +34,20 @@ export const createExpense = async (req,res) => {
 export const getExpenses = async(req,res) => {
     const userId = req.userId;
 
+    const { categoryId } = req.query;
+
     try {
+
+        let whereClause ={
+            userId: userId,
+        };
+
+        if(categoryId){
+            whereClause.categoryId = parseInt(categoryId);
+        }
+
         const expenses = await prisma.expense.findMany({
-            where: {
-                userId: userId,
-            },
+            where: whereClause,
             orderBy: {
                 date: "desc",
             },

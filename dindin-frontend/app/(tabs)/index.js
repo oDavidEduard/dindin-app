@@ -21,19 +21,29 @@ const NoData = () => (
   </View>
 );
 
-const DashboardHeader = ({ expenses }) => {
+const categorySetup = {
+  1: { name: 'Alimentação', color: '#E86363', icon: 'fast-food' },
+  2: { name: 'Transporte', color: '#63E8B7', icon: 'bus' },
+  3: { name: 'Lazer', color: '#63AEE8', icon: 'game-controller' },
+  4: { name: 'Moradia', color: '#3a2674', icon: 'home' },
+  5: { name: 'Outros', color: '#e22bcaff', icon: 'ellipsis-horizontal' },
+};
+
+const categoryList = Object.keys(categorySetup).map(key => ({ id: key, ...categorySetup[key] }));
+
+const DashboardHeader = ({ expenses, userName, monthlyIncome, handleLogout, router }) => {
 
   const totalSpent = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
 
-  const saldo = 1518.00;
+  const saldo = monthlyIncome - totalSpent;
 
 return (
     <View>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>
-          Olá, {"\n"}<Text style={styles.headerPurpleTitle}>David!</Text>
+          Olá, {"\n"}<Text style={styles.headerPurpleTitle}>{userName}</Text>
         </Text>
-        <TouchableOpacity style={styles.profileButton}>
+        <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
           <View style={styles.profileCircle}>
             <Ionicons name="person" size={20} color="#6A1B9A" />
           </View>
@@ -44,6 +54,21 @@ return (
         <View style={styles.gradientOverlay} />
         <Text style={styles.saldoLabel}>Seu saldo:</Text>
         <Text style={styles.saldoValue}>R$ {saldo.toFixed(2).replace('.', ',')}</Text>
+      </View>
+
+      <View style={styles.categories}>
+        {categoryList.map((category) => (
+          <TouchableOpacity
+            key={category.id}
+            style={styles.categoryItem}
+            onPress={() => router.push(`/category/${category.id}`)}
+            >
+              <View style={[styles.categoryCircle, { backgroundColor: category.color, opacity: 0.2}]}>
+                <Ionicons name={category.icon} size={28} color={category.color}/>
+              </View>
+              <Text style={styles.categoryLabel}>{category.name}</Text>
+            </TouchableOpacity>
+        ))}
       </View>
 
       <Text style={styles.totalSpentLabel}>Seu gasto até agora</Text>
@@ -66,12 +91,27 @@ export default function DashboardScreen(){
     const router = useRouter();
     const [expenses, setExpenses] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [userName, setUserName] = useState("");
+    const [monthlyIncome, setMonthlyIncome] = useState(0);
 
+    const handleLogout = async () => {
+      await AsyncStorage.removeItem('userToken');
+      await AsyncStorage.removeItem('userName');
+      await AsyncStorage.removeItem('monthlyIncome');
+      router.replace("/");
+    }
+    
     const fetchExpenses = async () => {
       setIsLoading(true);
 
       try {
         const token = await AsyncStorage.getItem("userToken");
+
+        if(!token){
+          handleLogout();
+          return;
+        }
+
         const response = await fetch(`${API_URL}/api/expenses`, {
           headers: { "Authorization": `Bearer ${token}` }
         });
@@ -94,9 +134,28 @@ export default function DashboardScreen(){
 
     useFocusEffect(
       React.useCallback(() => {
+        const loadUserData = async () => {
+        const name = await AsyncStorage.getItem("userName");
+        const income = await AsyncStorage.getItem("monthlyIncome");
+
+        if(name){
+          setUserName(name);
+        }
+
+        if(income){
+          setMonthlyIncome(parseFloat(income));
+        }
+      };
+      loadUserData();
+
         fetchExpenses();
       }, [])
+
     );
+
+    if (!fontsLoaded) {
+      return null; 
+    }
 
     return(
     <SafeAreaView style={styles.safeArea}>
@@ -109,10 +168,25 @@ export default function DashboardScreen(){
           <FlatList
             data={expenses}
             keyExtractor={(item) => item.id.toString()}
-            ListHeaderComponent={<DashboardHeader expenses={expenses} />}
+            ListHeaderComponent={<DashboardHeader expenses={expenses} userName={userName} monthlyIncome={monthlyIncome} handleLogout={handleLogout} router={router} />}
             ListEmptyComponent={<NoData />}
             renderItem={({ item }) => (
               <View style={styles.expenseItem}>
+                <View style={styles.expenseIconContainer}>
+                  <View style={[
+                    styles.expenseIcon, 
+                    { 
+                      backgroundColor: categorySetup[item.categoryId]?.color || categorySetup[5].color,
+                      opacity: 0.2
+                    }
+                    ]}>
+                      <Ionicons 
+                      name={categorySetup[item.categoryId]?.icon || categorySetup[5].icon} 
+                      size={24} 
+                      color={categorySetup[item.categoryId]?.color || categorySetup[5].color} 
+                      />
+                      </View>
+                      </View>
                 <View style={styles.expenseInfo}>
                   <Text style={styles.expenseName}>{item.name || "Sem nome"}</Text>
                   <Text style={styles.expenseDetails}>
@@ -239,7 +313,6 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#6A1B9A',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -294,7 +367,6 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#6A1B9A',
     justifyContent: 'center',
     alignItems: 'center',
   },

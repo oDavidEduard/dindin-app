@@ -56,7 +56,7 @@ export default function RegisterScreen(){
             alert(data.error || "Erro ao tentar se cadastrar.");
           } else {
             alert(`Seja bem-vindo, ${name}!`);
-            router.push("/setup");
+            router.push("/login");
           }
 
         } catch (error) {

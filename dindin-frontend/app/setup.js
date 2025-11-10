@@ -57,8 +57,8 @@ export default function SetupScreen(){
                 alert(data.error || "Erro ao salvar a renda.");
             } else {
                 alert("Renda salva com sucesso!");
-
-                router.replace("/dashboard");
+                await AsyncStorage.setItem("monthlyIncome", incomeValue.toString());
+                router.replace("/(tabs)");
             }
 
         } catch (error) {

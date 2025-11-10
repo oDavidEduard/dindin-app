@@ -49,6 +49,8 @@ export default function LoginScreen(){
 
             await AsyncStorage.setItem("userToken", data.token);
 
+            await AsyncStorage.setItem("userName", data.user.name);
+
             if (data.user.monthlyIncome === null || data.user.monthlyIncome === 0){
 
               router.replace("/setup");
