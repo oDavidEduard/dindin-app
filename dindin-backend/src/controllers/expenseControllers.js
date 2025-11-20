@@ -128,3 +128,55 @@ export const deleteExpense = async(req,res) => {
         res.status(500).json({ error: "Erro interno." });
     }
 };
+
+export const getPrediction = async(req,res) =>{
+    const userId = req.userId;
+    const { categoryId } = req.query;
+
+    if(!categoryId){
+        return res.status(400);json({ error: "Categoria é obrigatoria" });
+    }
+
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+
+    const firstDay = new Date(year,month, 1);
+    const lastDay = new Date(year,month + 1, 0);
+
+    try {
+        const expenses = await prisma.expense.findMany({
+            where:{
+                userId: userId,
+                categoryId: parseInt(categoryId),
+                date:{
+                    gte: firstDay,
+                    lte: lastDay,
+                },
+            },
+        });
+
+        const totalSpent = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+
+        const currentDay = now.getDate();
+        const totalDaysInMonth = lastDay.getDate();
+
+        const daysPassed = currentDay === 0 ? 1 : currentDay;
+
+        const projectedTotal = (totalSpent / daysPassed) * totalDaysInMonth
+
+        res.json({
+            categoryId: parseInt(categoryId),
+            totalSpentNow: totalSpent,
+            daysPassed: daysPassed,
+            totalDaysInMonth: totalDaysInMonth,
+            prediction: projectedTotal,
+
+            status: projectedTotal > totalSpent * 1.2 ? "Tendência de alta" : "Estável"
+        });
+
+    } catch (error) {
+        console.error("Erro na predição: ", error);
+        res.status(500).json({ error: "Erro ao calcular predição" });
+    }
+};

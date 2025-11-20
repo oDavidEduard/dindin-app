@@ -46,7 +46,7 @@ export default function AddExpenseModal() {
     };
 
     const handleAddExpense = async () => {
-        const expenseAmount = parseFloat(amount);
+        const expenseAmount = parseFloat(amount.replace(',', '.'));
         if(!expenseAmount || expenseAmount <= 0){
             alert("Por favor, insira um valor válido.");
             return;

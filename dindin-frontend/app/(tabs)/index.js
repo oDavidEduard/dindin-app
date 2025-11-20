@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, ActivityIndicator, Modal, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { useFonts } from "expo-font";
@@ -31,7 +31,7 @@ const categorySetup = {
 
 const categoryList = Object.keys(categorySetup).map(key => ({ id: key, ...categorySetup[key] }));
 
-const DashboardHeader = ({ expenses, userName, monthlyIncome, handleLogout, router }) => {
+const DashboardHeader = ({ expenses, userName, monthlyIncome, confirmLogout, router }) => {
 
   const totalSpent = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
 
@@ -43,7 +43,7 @@ return (
         <Text style={styles.headerTitle}>
           Olá, {"\n"}<Text style={styles.headerPurpleTitle}>{userName}</Text>
         </Text>
-        <TouchableOpacity style={styles.profileButton} onPress={handleLogout}>
+        <TouchableOpacity style={styles.profileButton} onPress={confirmLogout}>
           <View style={styles.profileCircle}>
             <Ionicons name="person" size={20} color="#6A1B9A" />
           </View>
@@ -63,9 +63,7 @@ return (
             style={styles.categoryItem}
             onPress={() => router.push(`/category/${category.id}`)}
             >
-              <View style={[styles.categoryCircle, { backgroundColor: category.color, opacity: 0.2}]}>
                 <Ionicons name={category.icon} size={28} color={category.color}/>
-              </View>
               <Text style={styles.categoryLabel}>{category.name}</Text>
             </TouchableOpacity>
         ))}
@@ -94,12 +92,21 @@ export default function DashboardScreen(){
     const [userName, setUserName] = useState("");
     const [monthlyIncome, setMonthlyIncome] = useState(0);
 
-    const handleLogout = async () => {
-      await AsyncStorage.removeItem('userToken');
-      await AsyncStorage.removeItem('userName');
-      await AsyncStorage.removeItem('monthlyIncome');
-      router.replace("/");
-    }
+    const [logoutModalVisible, setLogoutModalVisible] = useState(false);
+    const [fabOpen, setFabOpen] = useState(false);
+    
+    const performLogout = async () => {
+      setLogoutModalVisible(false);
+      await AsyncStorage.multiRemove(['userToken']);
+
+      setTimeout(() => {
+        if(router.canDismiss()){
+          router.dismissAll();
+        }
+        router.replace("/");
+      })
+      
+    };
     
     const fetchExpenses = async () => {
       setIsLoading(true);
@@ -108,7 +115,7 @@ export default function DashboardScreen(){
         const token = await AsyncStorage.getItem("userToken");
 
         if(!token){
-          handleLogout();
+          performLogout();
           return;
         }
 
@@ -134,6 +141,7 @@ export default function DashboardScreen(){
 
     useFocusEffect(
       React.useCallback(() => {
+        setFabOpen(false);
         const loadUserData = async () => {
         const name = await AsyncStorage.getItem("userName");
         const income = await AsyncStorage.getItem("monthlyIncome");
@@ -168,24 +176,24 @@ export default function DashboardScreen(){
           <FlatList
             data={expenses}
             keyExtractor={(item) => item.id.toString()}
-            ListHeaderComponent={<DashboardHeader expenses={expenses} userName={userName} monthlyIncome={monthlyIncome} handleLogout={handleLogout} router={router} />}
+            ListHeaderComponent={
+            <DashboardHeader 
+              expenses={expenses} 
+              userName={userName} 
+              monthlyIncome={monthlyIncome} 
+              confirmLogout={() => setLogoutModalVisible(true)} 
+              router={router} 
+              />
+            }
             ListEmptyComponent={<NoData />}
             renderItem={({ item }) => (
               <View style={styles.expenseItem}>
                 <View style={styles.expenseIconContainer}>
-                  <View style={[
-                    styles.expenseIcon, 
-                    { 
-                      backgroundColor: categorySetup[item.categoryId]?.color || categorySetup[5].color,
-                      opacity: 0.2
-                    }
-                    ]}>
                       <Ionicons 
                       name={categorySetup[item.categoryId]?.icon || categorySetup[5].icon} 
                       size={24} 
                       color={categorySetup[item.categoryId]?.color || categorySetup[5].color} 
                       />
-                      </View>
                       </View>
                 <View style={styles.expenseInfo}>
                   <Text style={styles.expenseName}>{item.name || "Sem nome"}</Text>
@@ -203,13 +211,82 @@ export default function DashboardScreen(){
           />
         )}
 
-        {/* Espaço para o botão FAB */}
-        <TouchableOpacity 
-          style={styles.btnAdd} 
-          onPress={() => router.push("/addExpenseModal")}
+        {
+          fabOpen && (
+            <TouchableOpacity
+              style={styles.fabOverlay}
+              activeOpacity={1}
+              onPress={() => setFabOpen(false)}
+            />
+          )
+        }
+
+        {
+          fabOpen && (
+            <TouchableOpacity
+              style={[styles.fabOption, { bottom: 160, backgroundColor: '#4CAF50' }]}
+              onPress={() => {
+                setFabOpen(false);
+                router.push("/addIncomeModal");
+              }}
+            >
+              <Ionicons name="wallet" size={24} color="white"/>
+              <Text style={styles.fabLabel}>Receita</Text>
+            </TouchableOpacity>
+          )
+        }
+
+        {
+          fabOpen && (
+            <TouchableOpacity
+              style={[styles.fabOption, { bottom: 100, backgroundColor: '#eb5050ff' }]}
+              onPress={() => {
+                setFabOpen(false);
+                router.push("/addExpenseModal");
+              }}
+            >
+              <Ionicons name="cart" size={24} color="white"/>
+              <Text style={styles.fabLabel}>Despesa</Text>
+            </TouchableOpacity>
+          )
+        }
+
+        <TouchableOpacity
+          style={[styles.btnAdd, fabOpen ? { backgroundColor: "#333" } : {}]}
+          onPress={() => setFabOpen(!fabOpen)}
         >
-          <Ionicons name="add" size={32} color="white" />
+          <Ionicons name={fabOpen ? "close" : "add"} size={32} color="white"/>
         </TouchableOpacity>
+        
+        <Modal
+          animationType='fade'
+          transparent={true}
+          visible={logoutModalVisible}
+          onRequestClose={() => setLogoutModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Sair da conta</Text>
+              <Text style={styles.modalMessage}>Tem certeza?</Text>
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setLogoutModalVisible(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancelar</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.logoutButton]}
+                  onPress={performLogout}
+                >
+                  <Text style={styles.logoutButtonText}>Sair</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </View>
     </SafeAreaView>
   );
@@ -424,6 +501,63 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     fontFamily: "BricolageGrotesque-Regular",
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 8,
+    fontFamily: "BricolageGrotesque-Bold",
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    fontFamily: "BricolageGrotesque-Regular",
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  modalButton: {
+    flex: 1,
+    height: 48,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 6,
+  },
+  cancelButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  logoutButton: {
+    backgroundColor: '#6A1B9A',
+  },
+  cancelButtonText: {
+    color: '#333',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  logoutButtonText: {
+    color: 'white',
+    fontWeight: '600',
+    fontSize: 16,
+  },
   btnAdd: {
     position: 'absolute',
     right: 24,
@@ -434,10 +568,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 6,
+    elevation: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+    zIndex: 999
   },
+  fabOverlay: {
+      position: 'absolute',
+      top: 0, bottom: 0, left: 0, right: 0,
+      backgroundColor: 'rgba(255,255,255,0.8)', // Fundo branco transparente para focar
+      zIndex: 90
+  },
+  fabOption: {
+      position: 'absolute',
+      right: 24, // Alinhado com o botão principal
+      flexDirection: 'row-reverse', // Icone na direita
+      alignItems: 'center',
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 30,
+      elevation: 10,
+      zIndex: 95,
+  },
+  fabLabel: {
+      color: 'white',
+      fontWeight: 'bold',
+      marginRight: 10,
+      fontSize: 16
+  }
 });

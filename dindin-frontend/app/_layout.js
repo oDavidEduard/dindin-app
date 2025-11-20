@@ -23,21 +23,30 @@ export default function TabsLayout() {
         name="setup"
         options={{ title: 'Configuração Inicial' }}
       />
-      <Stack.Screen
-        name="dashboard"
-        options={{ title: 'Dashboard' }}
-      />
 
       <Stack.Screen
         name="(tabs)"
         options={{ headerShown: false }}
       />
-      
+
+      <Stack.Screen
+        name="category/[id]"
+        options={{ headerShown: false }}   
+      />
+         
       <Stack.Screen
         name="addExpenseModal"
         options={{
           presentation: "modal",
           title: "Adicionar gasto",
+        }}
+      />
+
+      <Stack.Screen
+        name="addIncomeModal"
+        options={{
+          presentation: "modal",
+          title: "Adicionar saldo",
         }}
       />
     </Stack>

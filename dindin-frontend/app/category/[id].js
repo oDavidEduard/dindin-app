@@ -20,27 +20,37 @@ export default function CategoryDetailScreen(){
     const { id } = useLocalSearchParams();
 
     const [expenses, setExpenses] = useState([]);
+    const [prediction, setPrediction] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     const categoryInfo = categorySetup[id] || categorySetup[5];
 
     useEffect(() => {
-        const fetchCategoryExpenses = async () => {
+        const loadData = async () => {
             setIsLoading(true);
 
             try {
                 const token = await AsyncStorage.getItem("userToken");
 
-                const response = await fetch(`${API_URL}/api/expenses?categoryId=${id}`, {
+                const responseExpenses = await fetch(`${API_URL}/api/expenses?categoryId=${id}`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
 
-                const data = await response.json();
-                if(response.ok){
+                const data = await responseExpenses.json();
+                if(responseExpenses.ok){
                     setExpenses(data);
-                } else {
-                    alert(data.error || "Erro ao buscar despesas");
                 }
+
+                const responsePred = await fetch(`${API_URL}/api/expenses/prediction?categoryId=${id}`, {
+                  headers: { "Authorization": `Bearer ${token}` }
+                });
+
+                const dataPred = await responsePred.json();
+
+                if(responsePred.ok){
+                  setPrediction(dataPred);
+                }
+
             } catch (error) {
                 console.error("Erro de rede:", error);
                 alert("Erro de conexão");
@@ -49,7 +59,7 @@ export default function CategoryDetailScreen(){
             }
         };
 
-        fetchCategoryExpenses();
+        loadData();
     }, [id]);
 
     const totalSpentInCategory = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount), 0);
@@ -83,7 +93,7 @@ export default function CategoryDetailScreen(){
                 <View style={styles.expenseItem}>
                     {/* ... (ícone da categoria aqui) ... */}
                     <View style={styles.expenseInfo}>
-                    <Text style={styles.expenseDesc}>{item.description || 'Sem descrição'}</Text>
+                    <Text style={styles.expenseDesc}>{item.name || 'Sem nome'}</Text>
                     <Text style={styles.expenseDetails}>
                         R$ {parseFloat(item.amount).toFixed(2).replace('.', ',')} - {new Date(item.date).toLocaleDateString('pt-BR')}
                     </Text>
@@ -97,14 +107,19 @@ export default function CategoryDetailScreen(){
             />
             )}
             
-            {/* 3. Card de Predição (Placeholder da Semana 3) */}
+            {prediction && (
             <View style={[styles.predictionCard, { backgroundColor: categoryInfo.color }]}>
-                <Text style={styles.predictionLabel}>Predição para o próximo mês:</Text>
-                <Text style={styles.predictionValue}>42%</Text>
+                <Text style={styles.predictionLabel}>Estimativa para o fim do mês:</Text>
+                <Text style={styles.predictionValue}>R$ {prediction.prediction.toFixed(2).replace('.', ',')}
+                  <Text style={{color: 'white', opacity: 0.8, marginTop: 5}}>{"\n"}
+                    {prediction.status}
+                  </Text>
+                </Text>
             </View>
+          )}
             </View>
         </SafeAreaView> 
-    )
+    );
 }
 
 const styles = StyleSheet.create({
@@ -144,13 +159,13 @@ const styles = StyleSheet.create({
   },
   totalCardLabel: {
     fontSize: 14,
-    color: 'white',
+    color: 'black',
     opacity: 0.9,
   },
   totalCardValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: 'white',
+    color: 'black',
   },
   listTitle: {
     fontSize: 16,
@@ -195,6 +210,8 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: 'bold',
     color: 'white',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

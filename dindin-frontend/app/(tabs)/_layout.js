@@ -28,7 +28,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="flag" size={size} color={color} />
           ),
-          headerTitle: 'Minhas Metas', // Título do cabeçalho
+          headerShown:false, // Título do cabeçalho
         }}
       />
       <Tabs.Screen
@@ -38,7 +38,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, size }) => (
             <FontAwesome5 name="lightbulb" size={size} color={color} />
           ),
-          headerTitle: 'Central de Insights', // Título do cabeçalho
+          headerShown:false, // Título do cabeçalho
         }}
       />
     </Tabs>
