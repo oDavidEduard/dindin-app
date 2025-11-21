@@ -13,7 +13,7 @@ O **DinDin** é um aplicativo móvel de controle financeiro inteligente. Diferen
 
 ## 🚀 Funcionalidades Principais
 
-* **🔐 Autenticação Segura:** Login e Registro com JWT**
+* **🔐 Autenticação Segura:** Login e Registro com JWT
 * **📊 Dashboard Dinâmico:** Visualização de saldo, últimas despesas e filtro rápido por categorias.
 * **🤖 Predição de Gastos (IA):** Um microsserviço em Python que utiliza **Regressão Linear (Scikit-Learn)** para analisar seu histórico e prever quanto você gastará até o fim do mês em cada categoria.
 * **🎯 Metas e Orçamentos:** Defina limites de gastos por categoria e acompanhe barras de progresso em tempo real.
