@@ -163,7 +163,9 @@ export const getPrediction = async(req,res) =>{
         const totalSpentNow = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
 
         try {
-            const aiResponse = await axios.post('http://127.0.0.1:8000/predict', {
+            const pythonUrl = process.env.PYTHON_API_URL || 'http://127.0.0.1:8000';
+
+            const pythonResponse = await axios.post(`${pythonUrl}/predict`, {
                 expenses: expenseList,
                 target_month: month + 1,
                 target_year: year
