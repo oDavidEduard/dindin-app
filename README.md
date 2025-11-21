@@ -109,11 +109,7 @@ npx expo start
 
 ---
 
-###🚀 Deploy
-* **API Node** - Implementado no Render
-* **API Python** - Implementado no Render
-* **Database** - Rodando no Neon.tech
-
 ## 🧑‍💻 Autor
 
 David Nunes
+davideduard227@gmail.com
