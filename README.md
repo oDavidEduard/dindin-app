@@ -5,8 +5,36 @@ O **DinDin** é um aplicativo móvel de controle financeiro inteligente. Diferen
 
 ---
 
-## 📱 Screenshots
+## 📱 Preview do Projeto
 
+- Login e Cadastro
+  
+![GIF](./dindin-frontend/assets/images/GifLogin.gif)
+
+
+- Adicionar despesa
+
+![GIF](./dindin-frontend/assets/images/GifAddDespesa.gif)
+
+
+- Adicionar saldo
+
+![GIF](./dindin-frontend/assets/images/GifAddReceita.gif)
+
+
+- Estimativa de gastos (IA)
+
+![GIF](./dindin-frontend/assets/images/GifIA.gif)
+
+
+- Tela de Metas
+
+![GIF](./dindin-frontend/assets/images/GifMetas.gif)
+
+
+- Tela de Insights
+
+![GIF](./dindin-frontend/assets/images/GifInsights.gif)
 
 
 ---
