@@ -1,9 +1,5 @@
 # 💸 DinDin - Gerenciador Financeiro com IA
 
-![Badge Concluído](https://img.shields.io/badge/Status-Concluído-green)
-![Badge React Native](https://img.shields.io/badge/Mobile-React%20Native-blue)
-![Badge Node](https://img.shields.io/badge/Backend-Node.js-green)
-![Badge Python](https://img.shields.io/badge/AI-Python-yellow)
 
 O **DinDin** é um aplicativo móvel de controle financeiro inteligente. Diferente de planilhas comuns, ele utiliza **Inteligência Artificial** para prever seus gastos futuros, ajudando você a manter suas contas no azul.
 
@@ -58,7 +54,65 @@ O projeto foi construído utilizando uma seguinte estrutura:
 2. Python 3 instalado
 3. Conta na Neon.tech (ou Postgres local)
 
+---
 
+### 1️⃣ Configurando o Backend
+
+```bash
+
+cd dindin-backend
+npm install
+
+# Crie um arquivo .env na pasta dindin-backend com:
+# DATABASE_URL="sua_string_conexao_postgres"
+# JWT_SECRET="seu_segredo_jwt"
+# PYTHON_API_URL="[http://127.0.0.1:8000](http://127.0.0.1:8000)"
+
+# Criar as tabelas e popular dados iniciais
+npx prisma migrate dev
+npx prisma db seed
+
+# Rodar o servidor
+npm run dev
+
+```
+
+---
+
+### 2️⃣ Configurar a IA (Python)
+
+```bash
+
+cd ../dindin-ai
+
+pip install -r requirements.txt
+
+# Rodar o servidor
+uvicorn main:app --reload --port 8000
+
+```
+---
+
+### 3️⃣ Configurar o Frontend
+
+```bash
+
+cd ../dindin-frontend
+npm install
+
+# Crie um arquivo constants/api.js apontando para o seu IP local se for testar no celular físico
+# export const API_URL = 'http://SEU_IP_LOCAL:3000';
+
+npx expo start
+
+```
+
+---
+
+###🚀 Deploy
+* **API Node** - Implementado no Render
+* **API Python** - Implementado no Render
+* **Database** - Rodando no Neon.tech
 
 ## 🧑‍💻 Autor
 
