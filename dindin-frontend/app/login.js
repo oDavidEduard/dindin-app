@@ -20,7 +20,7 @@ export default function LoginScreen(){
     const [password, setPassword] = useState("");
 
     const [isLoading, setIsLoading] = useState(false);
-
+    
     const handleLogin = async () => {
         if(!email || !password){
             alert("Preencha todos os campos.");

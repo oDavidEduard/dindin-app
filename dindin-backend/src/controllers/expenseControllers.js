@@ -1,4 +1,5 @@
 import { prisma } from "../index.js";
+import axios from 'axios';
 
 //Criar despesa
 export const createExpense = async (req,res) => {
@@ -149,31 +150,46 @@ export const getPrediction = async(req,res) =>{
             where:{
                 userId: userId,
                 categoryId: parseInt(categoryId),
-                date:{
-                    gte: firstDay,
-                    lte: lastDay,
-                },
+                date:{ gte: firstDay, lte: lastDay },
             },
+            orderBy: { date: 'asc' }
         });
 
-        const totalSpent = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
+        const expenseList = expenses.map(e => ({
+            date: e.date.toISOString().split('T')[0],
+            amount: parseFloat(e.amount)
+        }));
 
-        const currentDay = now.getDate();
-        const totalDaysInMonth = lastDay.getDate();
+        const totalSpentNow = expenses.reduce((sum, item) => sum + Number(item.amount), 0);
 
-        const daysPassed = currentDay === 0 ? 1 : currentDay;
+        try {
+            const aiResponse = await axios.post('http://127.0.0.1:8000/predict', {
+                expenses: expenseList,
+                target_month: month + 1,
+                target_year: year
+            });
 
-        const projectedTotal = (totalSpent / daysPassed) * totalDaysInMonth
+            const { prediction, trend } = aiResponse.data;
 
-        res.json({
-            categoryId: parseInt(categoryId),
-            totalSpentNow: totalSpent,
-            daysPassed: daysPassed,
-            totalDaysInMonth: totalDaysInMonth,
-            prediction: projectedTotal,
+            let statusMsg = "Estável";
+            if (trend === "increasing") statusMsg = "Tendência de Alta";
 
-            status: projectedTotal > totalSpent * 1.2 ? "Tendência de alta" : "Estável"
-        });
+            return res.json({
+                categoryId: parseInt(categoryId),
+                totalSpentNow: totalSpentNow,
+                prediction: prediction,
+                status: statusMsg
+            });
+
+        } catch (aiError) {
+            console.error("IA Offline ou Erro:", aiError.message);
+            return res.json({
+                categoryId: parseInt(categoryId),
+                totalSpentNow: totalSpentNow,
+                prediction: totalSpentNow,
+                status: "Cálculo indisponivel"
+            });
+        }
 
     } catch (error) {
         console.error("Erro na predição: ", error);
