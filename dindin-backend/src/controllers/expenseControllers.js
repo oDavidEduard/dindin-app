@@ -171,7 +171,7 @@ export const getPrediction = async(req,res) =>{
                 target_year: year
             });
 
-            const { prediction, trend } = aiResponse.data;
+            const { prediction, trend } = pythonResponse.data;
 
             let statusMsg = "Estável";
             if (trend === "increasing") statusMsg = "Tendência de Alta";
